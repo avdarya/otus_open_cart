@@ -33,7 +33,7 @@
 ```bash
     pytest 
 ```
-- с указанием браузера (--browser=ch, --browser=ff, --browser=sf, --browser=ya)
+- с указанием браузера (--browser=ch, --browser=ff, --browser=ya)
 ```bash
     pytest --browser=ff
 ```
