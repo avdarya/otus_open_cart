@@ -1,5 +1,4 @@
 import re
-from typing import Callable
 
 from selenium.webdriver.ie.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
@@ -25,16 +24,6 @@ def get_parsed_currency(price_text: str) -> str:
 
 def get_parsed_price(price_text: str) -> float:
     return _parse_price_parts(price_text)[1]
-
-def extract_price_data_from_products(selectors: dict[str, tuple[list[WebElement], Callable]]) -> dict[str, str|float]:
-    result = {}
-
-    for k, (elements, transform) in selectors.items():
-        texts = [transform(el.text) for el in elements]
-        result[f'price_{k}'] = [get_parsed_price(t) for t in texts]
-        result[f'currency_{k}'] = {get_parsed_currency(t) for t in texts}
-
-    return result
 
 def scroll_shim(driver: WebDriver, element: WebElement):
     x = element.location['x']
