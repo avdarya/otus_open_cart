@@ -1,10 +1,15 @@
+import json
 import os
 import pathlib
 from dataclasses import dataclass
+from typing import Generator, Any
 
+import allure
 import pytest
 import dotenv
-from _pytest.fixtures import FixtureRequest
+from _pytest.reports import TestReport
+from pytest import Item, FixtureRequest
+from _pytest.runner import CallInfo
 from faker import Faker
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -42,6 +47,17 @@ def pytest_addoption(parser):
     parser.addoption('--browser', default='ch')
     parser.addoption('--base_url', default=f'http://{os.getenv("LOCAL_IP")}:{os.getenv("OPENCART_PORT")}')
     parser.addoption('--driver', default=DRIVER_PATH)
+    parser.addoption('--project_log_level', default='INFO')
+    parser.addoption('--log_to_file', default=False)
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item: Item, call: CallInfo[Any]):
+    outcome = yield
+    rep: TestReport = outcome.get_result()
+    if rep.outcome != 'passed':
+        item.status = 'failed'
+    else:
+        item.status = 'passed'
 
 @pytest.fixture(scope='session')
 def base_url(request: FixtureRequest):
@@ -56,7 +72,7 @@ def password(request: FixtureRequest) -> str:
     return os.getenv('OPENCART_PASSWORD')
 
 @pytest.fixture
-def browser(request: FixtureRequest) -> WebDriver:
+def browser(request: FixtureRequest) -> Generator[WebDriver, Any, None]:
     url = request.config.getoption('--base_url')
     browser_name = request.config.getoption('--browser')
     driver_path = request.config.getoption('--driver')
@@ -75,13 +91,36 @@ def browser(request: FixtureRequest) -> WebDriver:
     else:
         raise Exception('Driver not supported')
 
-    request.addfinalizer(driver.quit)
+    # request.addfinalizer(driver.quit) # for return
+
+    allure.attach(
+        name=driver.session_id,
+        body=json.dumps(driver.capabilities, indent=4, ensure_ascii=False),
+        attachment_type=allure.attachment_type.JSON
+    )
+
+    driver.test_name = request.node.name
+    driver.log_level = request.config.getoption('--project_log_level')
+    driver.log_to_file = request.config.getoption('--log_to_file')
 
     driver.set_window_size(1280, 800)
-
     driver.get(url)
 
-    return driver
+    yield driver
+
+    if request.node.status == 'failed':
+        allure.attach(
+            name='failure_screenshot',
+            body=driver.get_screenshot_as_png(),
+            attachment_type=allure.attachment_type.PNG
+        )
+        allure.attach(
+            name='page_source',
+            body=driver.page_source,
+            attachment_type=allure.attachment_type.HTML
+        )
+
+    driver.quit()
 
 @pytest.fixture
 def admin_browser(browser: WebDriver, base_url: str, username: str, password: str) -> WebDriver:

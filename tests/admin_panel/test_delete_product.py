@@ -1,3 +1,4 @@
+import allure
 from selenium.webdriver.remote.webdriver import WebDriver
 from pages.components.allert_success import AlertSuccess
 from pages.admin_panel.products.product_list_page import ProductListPage
@@ -5,6 +6,10 @@ from pages.admin_panel.dashboard_page import DashboardPage
 from tests.conftest import ProductData
 
 
+@allure.epic('Admin panel')
+@allure.feature('Product management')
+@allure.story('Delete product from list')
+@allure.title('Delete single product')
 def test_delete_product(admin_browser: WebDriver, added_product: ProductData):
     DashboardPage(admin_browser) \
         .get_navigation_menu() \
@@ -16,7 +21,7 @@ def test_delete_product(admin_browser: WebDriver, added_product: ProductData):
         .click_delete() \
         .confirm_delete()
 
-    alert_text = AlertSuccess(admin_browser).get_alert_text()
+    alert_text = AlertSuccess(admin_browser, product_page.logger).get_alert_text()
 
     assert alert_text == 'Success: You have modified products!'
 

@@ -41,3 +41,6 @@
 ```bash
     pytest --base_url=http://localhost:8082
 ```
+
+
+pytest --project_log_level=INFO --log_to_file=True
