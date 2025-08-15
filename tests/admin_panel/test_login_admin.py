@@ -1,8 +1,13 @@
+import allure
 from selenium.webdriver.ie.webdriver import WebDriver
 from pages.admin_panel.dashboard_page import DashboardPage
 from pages.admin_panel.login_page import LoginPage
 
 
+@allure.epic('Admin panel')
+@allure.feature('Authorization')
+@allure.story('Valid credentials')
+@allure.title('Authorization with admin credentials')
 def test_login_admin(browser: WebDriver, base_url: str, username: str, password: str):
     LoginPage(browser, base_url) \
         .open_login_page() \

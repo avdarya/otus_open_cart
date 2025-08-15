@@ -1,6 +1,6 @@
 import re
 
-from selenium.webdriver.ie.webdriver import WebDriver
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -77,3 +77,10 @@ def wait_until_in_viewport(
         return True
     WebDriverWait(driver, timeout).until(_cond)
     return element
+
+def describe_logged_target(target: tuple[str, str] | WebElement) -> str:
+    if isinstance(target, tuple):
+        return f'{target}'
+    else:
+        text = getattr(target, 'text', str(target))
+        return f'"{text}"'

@@ -1,3 +1,4 @@
+import allure
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 
@@ -11,9 +12,13 @@ class DashboardPage(BaseAdminPage):
     def __init__(self, browser: WebDriver):
         super().__init__(browser)
 
+    @allure.step('Получить имя текущего пользователя')
     def get_profile_name(self) -> str:
+        self.logger.info('Get profile name')
         profile_name = self.get_element(self.PROFILE_NAME)
         return profile_name.text
 
+    @allure.step('Нажать на кнопку Выйти')
     def click_logout_button(self) -> None:
+        self.logger.info('Click Logout button')
         self.scroll_and_click(self.LOGOUT_BUTTON)
