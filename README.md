@@ -41,3 +41,9 @@
 ```bash
     pytest --base_url=http://localhost:8082
 ```
+- с выбором уровня логирования (например, --project_log_level=DEBUG) и сохранения логов в файл (--log_to_file)
+```bash
+pytest --project_log_level=INFO --log_to_file
+```
+
+

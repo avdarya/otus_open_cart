@@ -1,3 +1,4 @@
+import allure
 from selenium.webdriver.remote.webdriver import WebDriver
 
 from pages.components.allert_success import AlertSuccess
@@ -7,7 +8,11 @@ from pages.admin_panel.dashboard_page import DashboardPage
 from tests.conftest import ProductData
 
 
-def test_add_product(admin_browser: WebDriver, generate_product_data: ProductData):
+@allure.epic('Admin panel')
+@allure.feature('Product management')
+@allure.story('Success add product')
+@allure.title('Add new product')
+def test_add_product(admin_browser: WebDriver, generate_product_data: ProductData, logger):
     DashboardPage(admin_browser) \
         .get_navigation_menu() \
         .click_catalog() \
@@ -25,7 +30,7 @@ def test_add_product(admin_browser: WebDriver, generate_product_data: ProductDat
         .click_tab_seo() \
         .fill_keyword(generate_product_data.keyword) \
         .click_save()
-    alert_text = AlertSuccess(admin_browser).get_alert_text()
+    alert_text = AlertSuccess(admin_browser, product_form_page.logger).get_alert_text()
 
     assert alert_text == 'Success: You have modified products!'
 

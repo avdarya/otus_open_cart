@@ -1,3 +1,4 @@
+import allure
 import pytest
 from selenium.webdriver.remote.webdriver import WebDriver
 from pages.storefront.desktops_page import DesktopsPage
@@ -6,7 +7,10 @@ from pages.storefront.main_page import MainPage
 from pages.storefront.product_page import ProductPage
 from pages.storefront.register_customer_page import RegisterCustomerPage
 
-
+@allure.epic('Storefront')
+@allure.feature('UI layout')
+@allure.story('Elements visibility - Main page')
+@allure.title('Verify Main page UI elements visibility')
 @pytest.mark.parametrize('product, expected_desc, expected_price', [(
         'MacBook',
         'Intel Core 2 Duo processor Powered by an Intel Core 2 Duo processor at speeds up to 2.16GHz, t..',
@@ -16,7 +20,8 @@ def test_main_page(
         browser: WebDriver,
         product: str,
         expected_desc: str,
-        expected_price: str
+        expected_price: str,
+        logger
 ):
     product_card = MainPage(browser).get_product_card(product)
 
@@ -25,7 +30,11 @@ def test_main_page(
     assert product_card.get_price_new() == expected_price
     assert product_card.is_visible_add_to_cart()
 
-def test_desktops_page(browser: WebDriver, base_url: str):
+@allure.epic('Storefront')
+@allure.feature('UI layout')
+@allure.story('Elements visibility - Desktops page')
+@allure.title('Verify Desktops page UI elements visibility')
+def test_desktops_page(browser: WebDriver, base_url: str, logger):
     desktop_page = DesktopsPage(browser, base_url).go_to_desktops_page()
     product_cards = desktop_page.get_product_cards()
 
@@ -34,22 +43,11 @@ def test_desktops_page(browser: WebDriver, base_url: str):
     assert desktop_page.is_visible_sort_input()
     assert desktop_page.is_visible_count_input()
     assert len(product_cards) == 10
-#
-# def test_product_page(browser: WebDriver, base_url: str):
-#     browser.get(f'{base_url}/en-gb/product/iphone')
-#
-#     title = browser.find_element(By.CSS_SELECTOR, '#content h1')
-#     price_new = browser.find_element(By.CSS_SELECTOR, 'span.price-new')
-#     add_button = browser.find_element(By.CSS_SELECTOR, '#button-cart')
-#     reviews = browser.find_elements(By.CSS_SELECTOR, 'span.fa-stack')
-#     description = browser.find_element(By.CSS_SELECTOR, '#tab-description p.intro')
-#
-#     assert title.text == 'iPhone'
-#     assert add_button.is_displayed()
-#     assert price_new.text == '$123.20'
-#     assert len(reviews) == 5
-#     assert ' '.join(description.text.split()) == 'iPhone is a revolutionary new mobile phone that allows you to make a call by simply tapping a name or number in your address book, a favorites list, or a call log. It also automatically syncs all your contacts from a PC, Mac, or Internet service. And it lets you select and listen to voicemail messages in whatever order you want just like email.'
 
+@allure.epic('Storefront')
+@allure.feature('UI layout')
+@allure.story('Elements visibility - Product page')
+@allure.title('Verify Product page UI elements visibility')
 @pytest.mark.parametrize('product, expected_desc, expected_price_new,  expected_stars_count',
     [(
         'iPhone',
@@ -63,7 +61,8 @@ def test_product_page(
         product: str,
         expected_desc: str,
         expected_price_new: str,
-        expected_stars_count: int
+        expected_stars_count: int,
+        logger
 ):
     MainPage(browser) \
         .get_product_card(product) \
@@ -76,7 +75,11 @@ def test_product_page(
     assert page.is_visible_add_button()
     assert page.get_stars_count() == expected_stars_count
 
-def test_login_page(browser: WebDriver, base_url: str):
+@allure.epic('Storefront')
+@allure.feature('UI layout')
+@allure.story('Elements visibility - Login page')
+@allure.title('Verify Desktops page UI elements visibility')
+def test_login_page(browser: WebDriver, base_url: str, logger):
     page = LoginPage(browser, base_url).open_login_page()
 
     assert page.is_visible_username_input()
@@ -85,7 +88,11 @@ def test_login_page(browser: WebDriver, base_url: str):
     assert page.is_visible_password_icon()
     assert page.is_visible_submit_button()
 
-def test_register_customer_page(browser: WebDriver, base_url: str):
+@allure.epic('Storefront')
+@allure.feature('UI layout')
+@allure.story('Elements visibility - Register customer page')
+@allure.title('Verify Register customer page UI elements visibility')
+def test_register_customer_page(browser: WebDriver, base_url: str, logger):
     page = RegisterCustomerPage(browser, base_url).go_to_register_customer_page()
 
     assert page.is_visible_first_name_input()

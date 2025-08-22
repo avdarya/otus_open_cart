@@ -1,3 +1,4 @@
+import allure
 import pytest
 from selenium.webdriver.chrome.webdriver import WebDriver
 from pages.components.allert_success import AlertSuccess
@@ -5,8 +6,12 @@ from pages.storefront.cart_page import CartPage
 from pages.storefront.main_page import MainPage
 
 
+@allure.epic('Storefront')
+@allure.feature('Cart management')
+@allure.story('Add product to cart')
+@allure.title('Add product to cart from Main page')
 @pytest.mark.parametrize('product, price', [('MacBook', '602.00')])
-def test_add_to_cart_from_main(browser: WebDriver, product: str, price: str):
+def test_add_to_cart_from_main(browser: WebDriver, product: str, price: str, logger):
     main_page = MainPage(browser)
     header_cart = main_page.get_header_cart()
 
@@ -14,7 +19,7 @@ def test_add_to_cart_from_main(browser: WebDriver, product: str, price: str):
 
     main_page.add_product_to_cart(product)
 
-    AlertSuccess(browser).close_alert()
+    AlertSuccess(browser, main_page.logger).close_alert()
 
     counter_after, cost_after = header_cart.get_counter_cost()
     assert counter_before + 1 == counter_after

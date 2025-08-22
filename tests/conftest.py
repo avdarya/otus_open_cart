@@ -1,10 +1,18 @@
+import json
+import logging
 import os
 import pathlib
+import hashlib
+import re
 from dataclasses import dataclass
+from typing import Generator, Any
 
+import allure
 import pytest
 import dotenv
-from _pytest.fixtures import FixtureRequest
+from _pytest.reports import TestReport
+from pytest import Item, FixtureRequest
+from _pytest.runner import CallInfo
 from faker import Faker
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -42,6 +50,74 @@ def pytest_addoption(parser):
     parser.addoption('--browser', default='ch')
     parser.addoption('--base_url', default=f'http://{os.getenv("LOCAL_IP")}:{os.getenv("OPENCART_PORT")}')
     parser.addoption('--driver', default=DRIVER_PATH)
+    parser.addoption('--project_log_level', default='INFO')
+    parser.addoption("--log_to_file", action="store_true")
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item: Item, call: CallInfo[Any]):
+    outcome = yield
+    rep: TestReport = outcome.get_result()
+    setattr(item, "rep_" + rep.when, rep)
+
+@pytest.fixture(autouse=True)
+def screenshot_on_failure(browser: WebDriver, request: FixtureRequest):
+    yield
+    rep = getattr(request.node, 'rep_call', None)
+
+    if rep and rep.failed and not getattr(rep, 'wasxfail', False):
+        try:
+            allure.attach(
+                name='failure_screenshot',
+                body=browser.get_screenshot_as_png(),
+                attachment_type=allure.attachment_type.PNG
+            )
+        except Exception:
+            pass
+        try:
+            allure.attach(
+                name='page_source',
+                body=browser.page_source,
+                attachment_type=allure.attachment_type.HTML
+            )
+        except Exception:
+            pass
+
+def _safe_name(nodeid: str) -> str:
+    name = re.sub(r'[\\/: ]', '_', nodeid)
+    return (name[:60] + '_' + hashlib.md5(name.encode()).hexdigest()[:8]) if len(name) > 70 else name
+
+@pytest.fixture
+def logger(request: FixtureRequest) -> logging.Logger:
+    log_level = request.config.getoption('--project_log_level')
+    log_to_file = request.config.getoption('--log_to_file')
+
+    root = logging.getLogger()
+    root.setLevel(logging.WARNING)
+
+    app = logging.getLogger('pages')
+    app.setLevel(getattr(logging, log_level.upper(), logging.INFO))
+    app.propagate = False
+
+    for h in list(app.handlers):
+        if isinstance(h, (logging.FileHandler, logging.StreamHandler)):
+            app.removeHandler(h)
+            try:
+                h.close()
+            except Exception:
+                pass
+
+    if log_to_file:
+        os.makedirs('logs', exist_ok=True)
+        fname = os.path.abspath(f'logs/{_safe_name(request.node.nodeid)}.log')
+        fh = logging.FileHandler(fname, mode='w', encoding='utf-8')
+        fh.setFormatter(logging.Formatter('%(asctime)s %(name)s [%(levelname)s] %(message)s'))
+        app.addHandler(fh)
+
+    sh = logging.StreamHandler()
+    sh.setFormatter(logging.Formatter('%(asctime)s %(name)s [%(levelname)s] %(message)s'))
+    app.addHandler(sh)
+
+    return logging.getLogger('tests')
 
 @pytest.fixture(scope='session')
 def base_url(request: FixtureRequest):
@@ -56,7 +132,7 @@ def password(request: FixtureRequest) -> str:
     return os.getenv('OPENCART_PASSWORD')
 
 @pytest.fixture
-def browser(request: FixtureRequest) -> WebDriver:
+def browser(request: FixtureRequest) -> Generator[WebDriver, Any, None]:
     url = request.config.getoption('--base_url')
     browser_name = request.config.getoption('--browser')
     driver_path = request.config.getoption('--driver')
@@ -75,13 +151,20 @@ def browser(request: FixtureRequest) -> WebDriver:
     else:
         raise Exception('Driver not supported')
 
-    request.addfinalizer(driver.quit)
+    # request.addfinalizer(driver.quit) # for return
+
+    allure.attach(
+        name=driver.session_id,
+        body=json.dumps(driver.capabilities, indent=4, ensure_ascii=False),
+        attachment_type=allure.attachment_type.JSON
+    )
 
     driver.set_window_size(1280, 800)
-
     driver.get(url)
 
-    return driver
+    yield driver
+
+    driver.quit()
 
 @pytest.fixture
 def admin_browser(browser: WebDriver, base_url: str, username: str, password: str) -> WebDriver:

@@ -1,3 +1,4 @@
+import allure
 import pytest
 from selenium.webdriver.remote.webdriver import WebDriver
 
@@ -6,13 +7,17 @@ from pages.storefront.register_customer_page import RegisterCustomerPage
 from pages.storefront.success_page import SuccessPage
 from tests.conftest import CustomerData
 
-
+@allure.epic('Storefront')
+@allure.feature('User registration')
+@allure.story('Register new customer account')
+@allure.title('Register new customer with valid data')
 @pytest.mark.parametrize('expected_success_header', ['Your Account Has Been Created!'])
 def test_register_new_customer(
         browser: WebDriver,
         base_url: str,
         generate_customer_data: CustomerData,
-        expected_success_header: str
+        expected_success_header: str,
+        logger
 ):
     RegisterCustomerPage(browser, base_url) \
         .go_to_register_customer_page() \

@@ -1,14 +1,22 @@
+import allure
 import pytest
 from selenium.webdriver.ie.webdriver import WebDriver
 from pages.storefront.main_page import MainPage
 
-
+@allure.epic('Storefront')
+@allure.feature('Currency management')
+@allure.story('Change currency - Main page')
+@allure.title('Prices update after change currency on Main page')
 @pytest.mark.parametrize('initial_currency, currency_to_select', [
     ('$', '€'), ('$', '£'), ('£', '$')
 ],
     ids=['Euro', 'Pound Sterling', 'Dollar']
 )
-def test_updated_prices_after_change_currency_main(browser: WebDriver, initial_currency: str, currency_to_select: str):
+def test_updated_prices_after_change_currency_main(
+        browser: WebDriver,
+        initial_currency: str,
+        currency_to_select: str,
+        logger):
     main_page = MainPage(browser)
     main_page.switch_currency(initial_currency)
     header_currency = main_page.get_header_currency()
@@ -35,6 +43,10 @@ def test_updated_prices_after_change_currency_main(browser: WebDriver, initial_c
     assert main_page.get_all_currencies_tax() == {currency_to_select}
 
 
+@allure.epic('Storefront')
+@allure.feature('Currency management')
+@allure.story('Change currency - Main page')
+@allure.title('Update header currency symbol after currency change on Main page')
 @pytest.mark.parametrize('initial_currency, currency_to_select', [
     ('$', '€'), ('$', '£'), ('£', '$')
 ],

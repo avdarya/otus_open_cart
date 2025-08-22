@@ -79,3 +79,5 @@ coverage.xml
 # Отчеты и результаты тестов
 allure-results/
 allure-report/
+
+logs/

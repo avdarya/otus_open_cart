@@ -1,3 +1,4 @@
+import allure
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 
@@ -10,6 +11,8 @@ class BaseAdminPage(BasePage):
     def __init__(self, browser: WebDriver):
         super().__init__(browser)
 
+    @allure.step('Получить навигационное меню')
     def get_navigation_menu(self) -> NavigationMenu:
+        self.logger.debug('Get navigation menu')
         menu = self.get_element(self.NAVIGATION_MENU)
-        return NavigationMenu(self.browser, menu)
+        return NavigationMenu(self.browser, menu, self.logger)
