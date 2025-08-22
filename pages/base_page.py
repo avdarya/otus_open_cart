@@ -1,6 +1,4 @@
 import logging
-import hashlib
-import os
 
 from selenium.common import TimeoutException
 from selenium.webdriver.remote.webdriver import WebDriver
@@ -18,36 +16,9 @@ class BasePage:
     CART = By.CSS_SELECTOR, '#header-cart button'
     CURRENCY_FORM = By.CSS_SELECTOR, '#form-currency'
 
-    def __init__(self, browser: WebDriver, logger: logging.Logger | None = None):
+    def __init__(self, browser: WebDriver):
         self.browser = browser
-        self._config_logger(logger)
-
-    def _config_logger(self, logger: logging.Logger | None):
-        self.logger = logger or logging.getLogger(type(self).__name__)
-        # self.logger.propagate = False # if False do not attach log to allure
-
-        level = getattr(self.browser, 'log_level', logging.INFO)
-        self.logger.setLevel(level)
-
-        log_to_file = getattr(self.browser, 'log_to_file', False)
-        if log_to_file:
-            os.makedirs('logs', exist_ok=True)
-            test_name = getattr(self.browser, 'test_name', 'test').replace('/', '_').replace('\\', '_')
-            safe_name = test_name
-            if len(safe_name) > 50:
-                hash_suffix = hashlib.md5(test_name.encode()).hexdigest()[:8]
-                safe_name = f'{test_name[:50]}_{hash_suffix}'
-            log_path = f'logs/{safe_name}.log'
-
-            already = any(
-                isinstance(h, logging.FileHandler) and getattr(h, 'baseFilename', None) == os.path.abspath(log_path)
-                for h in self.logger.handlers
-            )
-            if not already:
-                fh = logging.FileHandler(log_path, mode='w')
-                fmt = logging.Formatter('%(asctime)s %(name)s [%(levelname)s] %(message)s')
-                fh.setFormatter(fmt)
-                self.logger.addHandler(fh)
+        self.logger = logging.getLogger(f"{__name__}.{type(self).__name__}")
 
     def get_element(
             self,

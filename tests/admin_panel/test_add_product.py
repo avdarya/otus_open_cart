@@ -12,7 +12,7 @@ from tests.conftest import ProductData
 @allure.feature('Product management')
 @allure.story('Success add product')
 @allure.title('Add new product')
-def test_add_product(admin_browser: WebDriver, generate_product_data: ProductData):
+def test_add_product(admin_browser: WebDriver, generate_product_data: ProductData, logger):
     DashboardPage(admin_browser) \
         .get_navigation_menu() \
         .click_catalog() \

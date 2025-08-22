@@ -10,7 +10,7 @@ from tests.conftest import ProductData
 @allure.feature('Product management')
 @allure.story('Delete product from list')
 @allure.title('Delete single product')
-def test_delete_product(admin_browser: WebDriver, added_product: ProductData):
+def test_delete_product(admin_browser: WebDriver, added_product: ProductData, logger):
     DashboardPage(admin_browser) \
         .get_navigation_menu() \
         .click_catalog() \

@@ -16,7 +16,8 @@ def test_register_new_customer(
         browser: WebDriver,
         base_url: str,
         generate_customer_data: CustomerData,
-        expected_success_header: str
+        expected_success_header: str,
+        logger
 ):
     RegisterCustomerPage(browser, base_url) \
         .go_to_register_customer_page() \

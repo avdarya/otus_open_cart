@@ -12,7 +12,11 @@ from pages.storefront.main_page import MainPage
 ],
     ids=['Euro', 'Pound Sterling', 'Dollar']
 )
-def test_updated_prices_after_change_currency_main(browser: WebDriver, initial_currency: str, currency_to_select: str):
+def test_updated_prices_after_change_currency_main(
+        browser: WebDriver,
+        initial_currency: str,
+        currency_to_select: str,
+        logger):
     main_page = MainPage(browser)
     main_page.switch_currency(initial_currency)
     header_currency = main_page.get_header_currency()

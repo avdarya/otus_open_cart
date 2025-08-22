@@ -1,6 +1,9 @@
 import json
+import logging
 import os
 import pathlib
+import hashlib
+import re
 from dataclasses import dataclass
 from typing import Generator, Any
 
@@ -48,16 +51,73 @@ def pytest_addoption(parser):
     parser.addoption('--base_url', default=f'http://{os.getenv("LOCAL_IP")}:{os.getenv("OPENCART_PORT")}')
     parser.addoption('--driver', default=DRIVER_PATH)
     parser.addoption('--project_log_level', default='INFO')
-    parser.addoption('--log_to_file', default=False)
+    parser.addoption("--log_to_file", action="store_true")
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item: Item, call: CallInfo[Any]):
     outcome = yield
     rep: TestReport = outcome.get_result()
-    if rep.outcome != 'passed':
-        item.status = 'failed'
-    else:
-        item.status = 'passed'
+    setattr(item, "rep_" + rep.when, rep)
+
+@pytest.fixture(autouse=True)
+def screenshot_on_failure(browser: WebDriver, request: FixtureRequest):
+    yield
+    rep = getattr(request.node, 'rep_call', None)
+
+    if rep and rep.failed and not getattr(rep, 'wasxfail', False):
+        try:
+            allure.attach(
+                name='failure_screenshot',
+                body=browser.get_screenshot_as_png(),
+                attachment_type=allure.attachment_type.PNG
+            )
+        except Exception:
+            pass
+        try:
+            allure.attach(
+                name='page_source',
+                body=browser.page_source,
+                attachment_type=allure.attachment_type.HTML
+            )
+        except Exception:
+            pass
+
+def _safe_name(nodeid: str) -> str:
+    name = re.sub(r'[\\/: ]', '_', nodeid)
+    return (name[:60] + '_' + hashlib.md5(name.encode()).hexdigest()[:8]) if len(name) > 70 else name
+
+@pytest.fixture
+def logger(request: FixtureRequest) -> logging.Logger:
+    log_level = request.config.getoption('--project_log_level')
+    log_to_file = request.config.getoption('--log_to_file')
+
+    root = logging.getLogger()
+    root.setLevel(logging.WARNING)
+
+    app = logging.getLogger('pages')
+    app.setLevel(getattr(logging, log_level.upper(), logging.INFO))
+    app.propagate = False
+
+    for h in list(app.handlers):
+        if isinstance(h, (logging.FileHandler, logging.StreamHandler)):
+            app.removeHandler(h)
+            try:
+                h.close()
+            except Exception:
+                pass
+
+    if log_to_file:
+        os.makedirs('logs', exist_ok=True)
+        fname = os.path.abspath(f'logs/{_safe_name(request.node.nodeid)}.log')
+        fh = logging.FileHandler(fname, mode='w', encoding='utf-8')
+        fh.setFormatter(logging.Formatter('%(asctime)s %(name)s [%(levelname)s] %(message)s'))
+        app.addHandler(fh)
+
+    sh = logging.StreamHandler()
+    sh.setFormatter(logging.Formatter('%(asctime)s %(name)s [%(levelname)s] %(message)s'))
+    app.addHandler(sh)
+
+    return logging.getLogger('tests')
 
 @pytest.fixture(scope='session')
 def base_url(request: FixtureRequest):
@@ -99,26 +159,10 @@ def browser(request: FixtureRequest) -> Generator[WebDriver, Any, None]:
         attachment_type=allure.attachment_type.JSON
     )
 
-    driver.test_name = request.node.name
-    driver.log_level = request.config.getoption('--project_log_level')
-    driver.log_to_file = request.config.getoption('--log_to_file')
-
     driver.set_window_size(1280, 800)
     driver.get(url)
 
     yield driver
-
-    if request.node.status == 'failed':
-        allure.attach(
-            name='failure_screenshot',
-            body=driver.get_screenshot_as_png(),
-            attachment_type=allure.attachment_type.PNG
-        )
-        allure.attach(
-            name='page_source',
-            body=driver.page_source,
-            attachment_type=allure.attachment_type.HTML
-        )
 
     driver.quit()
 

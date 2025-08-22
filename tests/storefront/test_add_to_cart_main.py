@@ -11,7 +11,7 @@ from pages.storefront.main_page import MainPage
 @allure.story('Add product to cart')
 @allure.title('Add product to cart from Main page')
 @pytest.mark.parametrize('product, price', [('MacBook', '602.00')])
-def test_add_to_cart_from_main(browser: WebDriver, product: str, price: str):
+def test_add_to_cart_from_main(browser: WebDriver, product: str, price: str, logger):
     main_page = MainPage(browser)
     header_cart = main_page.get_header_cart()
 

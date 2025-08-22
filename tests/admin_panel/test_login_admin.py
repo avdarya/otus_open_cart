@@ -8,7 +8,7 @@ from pages.admin_panel.login_page import LoginPage
 @allure.feature('Authorization')
 @allure.story('Valid credentials')
 @allure.title('Authorization with admin credentials')
-def test_login_admin(browser: WebDriver, base_url: str, username: str, password: str):
+def test_login_admin(browser: WebDriver, base_url: str, username: str, password: str, logger):
     LoginPage(browser, base_url) \
         .open_login_page() \
         .fill_username(username) \

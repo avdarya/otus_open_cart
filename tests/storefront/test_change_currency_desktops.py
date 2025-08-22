@@ -16,7 +16,8 @@ def test_updated_prices_after_change_currency_desktops(
         browser: WebDriver,
         base_url: str,
         initial_currency: str,
-        currency_to_select: str
+        currency_to_select: str,
+        logger
 ):
     desktops_page = DesktopsPage(browser, base_url)
     desktops_page.go_to_desktops_page()

@@ -20,7 +20,8 @@ def test_main_page(
         browser: WebDriver,
         product: str,
         expected_desc: str,
-        expected_price: str
+        expected_price: str,
+        logger
 ):
     product_card = MainPage(browser).get_product_card(product)
 
@@ -33,7 +34,7 @@ def test_main_page(
 @allure.feature('UI layout')
 @allure.story('Elements visibility - Desktops page')
 @allure.title('Verify Desktops page UI elements visibility')
-def test_desktops_page(browser: WebDriver, base_url: str):
+def test_desktops_page(browser: WebDriver, base_url: str, logger):
     desktop_page = DesktopsPage(browser, base_url).go_to_desktops_page()
     product_cards = desktop_page.get_product_cards()
 
@@ -60,7 +61,8 @@ def test_product_page(
         product: str,
         expected_desc: str,
         expected_price_new: str,
-        expected_stars_count: int
+        expected_stars_count: int,
+        logger
 ):
     MainPage(browser) \
         .get_product_card(product) \
@@ -77,7 +79,7 @@ def test_product_page(
 @allure.feature('UI layout')
 @allure.story('Elements visibility - Login page')
 @allure.title('Verify Desktops page UI elements visibility')
-def test_login_page(browser: WebDriver, base_url: str):
+def test_login_page(browser: WebDriver, base_url: str, logger):
     page = LoginPage(browser, base_url).open_login_page()
 
     assert page.is_visible_username_input()
@@ -90,7 +92,7 @@ def test_login_page(browser: WebDriver, base_url: str):
 @allure.feature('UI layout')
 @allure.story('Elements visibility - Register customer page')
 @allure.title('Verify Register customer page UI elements visibility')
-def test_register_customer_page(browser: WebDriver, base_url: str):
+def test_register_customer_page(browser: WebDriver, base_url: str, logger):
     page = RegisterCustomerPage(browser, base_url).go_to_register_customer_page()
 
     assert page.is_visible_first_name_input()
