@@ -11,6 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 class AlertSuccess:
     SUCCESS_ALERT = By.CSS_SELECTOR, '.alert-success'
     CLOSE_BUTTON = By.CSS_SELECTOR, '.btn-close'
+    SHOPPING_CART_LINK = By.CSS_SELECTOR, '.alert-success a[href*="checkout/cart"]'
 
     def __init__(self, browser: WebDriver, logger: logging.Logger | None = None):
         self.browser = browser
@@ -28,3 +29,8 @@ class AlertSuccess:
         text = self.alert.text
         self.logger.debug(f'Getting alert text: {text}')
         return text
+
+    @allure.step('Перейти в корзину из уведомления')
+    def click_shopping_cart(self) -> None:
+        self.logger.info('Click "shopping cart" link in success alert')
+        self.alert.find_element(*self.SHOPPING_CART_LINK).click()

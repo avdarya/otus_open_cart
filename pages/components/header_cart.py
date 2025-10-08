@@ -5,10 +5,8 @@ from selenium.webdriver.ie.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 from pages.components.base_component import BaseComponent
-from utils.helpers import describe_logged_target
 
 
 class HeaderCart(BaseComponent):
@@ -29,20 +27,15 @@ class HeaderCart(BaseComponent):
         self.logger.debug(f'Counter={counter}, cost={cost}')
         return counter, cost
 
+    @allure.step('Ожидать обновления счётчика корзины')
+    def wait_for_cart_update(self, previous_counter: int, timeout: int = 5) -> None:
+        WebDriverWait(self.browser, timeout).until(
+            lambda d: int(d.find_element(*self.CART).text.split()[0]) != previous_counter
+        )
+
     @allure.step('Нажать на кнопку Корзина в Header')
     def click_cart_btn(self) -> 'HeaderCart':
         self.logger.info('Click Cart button')
         self.scroll_and_click(self.CART)
         return self
-
-    @allure.step('Нажать на кнопку Посмотреть корзину')
-    def go_to_cart_page(self) -> None:
-        self.logger.info("Go to cart page from header cart's link")
-        self.refresh_root(self.CART)
-        self.scroll_and_click(self.root)
-        self.logger.debug(f'Waiting for view cart link: {describe_logged_target(self.VIEW_CART)}')
-        view_cart = WebDriverWait(self.browser, 5).until(
-            EC.element_to_be_clickable(self.VIEW_CART)
-        )
-        view_cart.click()
 

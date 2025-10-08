@@ -24,7 +24,7 @@ class BasePage:
             self,
             locator: tuple[str, str],
             root: WebElement | None = None,
-            timeout: float = 5
+            timeout: float = 10
     ) -> WebElement:
         self.logger.debug(f'Get element: {describe_logged_target(locator)}')
         try:
@@ -40,7 +40,7 @@ class BasePage:
             self,
             locator: tuple[str, str],
             root: WebElement | None = None,
-            timeout: float = 5
+            timeout: float = 10
     ) -> list[WebElement]:
         self.logger.debug(f'Get elements: {describe_logged_target(locator)}')
         try:
@@ -70,7 +70,7 @@ class BasePage:
             element = target
         self.logger.debug(f'Element located: {describe_logged_target(element)}')
         scroll_shim(self.browser, element)
-        wait_until_in_viewport(self.browser, element, timeout=5, fully=False, unobstructed=True)
+        wait_until_in_viewport(self.browser, element, timeout=10, fully=False, unobstructed=True)
         element.click()
 
     def input_value(self, locator: tuple[str, str], text: str):

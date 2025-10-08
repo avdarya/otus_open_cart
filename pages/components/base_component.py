@@ -64,7 +64,9 @@ class BaseComponent:
             element = target
         self.logger.debug(f'Element located: {describe_logged_target(element)}')
         scroll_shim(self.browser, element)
-        wait_until_in_viewport(self.browser, element, timeout=5, fully=False, unobstructed=True)
+        fully = False
+        unobstructed = "firefox" not in self.browser.capabilities.get("browserName", "").lower()
+        wait_until_in_viewport(self.browser, element, timeout=10, fully=fully, unobstructed=unobstructed)
         element.click()
 
     def refresh_root(self, locator: tuple[str, str]) -> None:

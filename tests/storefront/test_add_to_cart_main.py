@@ -19,13 +19,16 @@ def test_add_to_cart_from_main(browser: WebDriver, product: str, price: str, log
 
     main_page.add_product_to_cart(product)
 
-    AlertSuccess(browser, main_page.logger).close_alert()
+    alert = AlertSuccess(browser, main_page.logger)
+    alert_text = alert.get_alert_text()
+    assert product in alert_text
 
+    header_cart.wait_for_cart_update(0)
     counter_after, cost_after = header_cart.get_counter_cost()
     assert counter_before + 1 == counter_after
     assert cost_before + float(price) == cost_after
 
-    header_cart.go_to_cart_page()
+    alert.click_shopping_cart()
     cart_page = CartPage(browser)
     product_row = cart_page.get_product_row(product)
 
