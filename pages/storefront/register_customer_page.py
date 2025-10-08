@@ -1,7 +1,8 @@
 import allure
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
-
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from pages.base_page import BasePage
 
 
@@ -10,8 +11,9 @@ class RegisterCustomerPage(BasePage):
     LAST_NAME_INPUT = By.CSS_SELECTOR, '#input-lastname'
     EMAIL_INPUT = By.CSS_SELECTOR, '#input-email'
     PASSWORD_INPUT = By.CSS_SELECTOR, '#input-password'
-    CONTINUE_BUTTON = By.CSS_SELECTOR, 'button[type="submit"]'
+    CONTINUE_BUTTON = By.CSS_SELECTOR, '#form-register button[type="submit"]'
     CHECKBOX_AGREE = By.CSS_SELECTOR, 'input[name="agree"]'
+    REGISTER_FORM = By.CSS_SELECTOR, '#form-register'
 
     def __init__(self, browser: WebDriver, base_url: str):
         super().__init__(browser)
@@ -21,7 +23,11 @@ class RegisterCustomerPage(BasePage):
     def go_to_register_customer_page(self) -> 'RegisterCustomerPage':
         self.logger.info('Open Register Customer Page')
         self.logger.debug(f'url: {self.url}')
+        self.browser.delete_all_cookies()
         self.browser.get(self.url)
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located(self.REGISTER_FORM)
+        )
         return self
 
     @allure.step('Заполнить поле Имя {first_name}')

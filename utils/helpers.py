@@ -65,7 +65,7 @@ def _centerpoint_visible(driver, element):
 def wait_until_in_viewport(
         driver: WebDriver,
         element: WebElement,
-        timeout: float = 5,
+        timeout: float = 10,
         fully: bool = False,
         unobstructed: bool = False
 ):

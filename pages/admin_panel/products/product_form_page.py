@@ -1,6 +1,8 @@
 import allure
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 from pages.admin_panel.base_admin_page import BaseAdminPage
 
@@ -44,12 +46,15 @@ class ProductFormPage(BaseAdminPage):
     def fill_description(self, description: str) -> 'ProductFormPage':
         self.logger.info(f'Fill description: {description}')
         self.logger.info('Switch to description frame')
-        frame = self.get_element(self.FRAME_DESCRIPTION)
-        self.browser.switch_to.frame(frame)
-        try:
-            self.input_value(self.DESCRIPTION_INPUT, description)
-        finally:
-            self.browser.switch_to.default_content()
+        _ = WebDriverWait(self.browser, 10).until(
+            EC.frame_to_be_available_and_switch_to_it(self.FRAME_DESCRIPTION)
+        )
+        editable = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located(self.DESCRIPTION_INPUT)
+        )
+        editable.clear()
+        editable.send_keys(description)
+        self.browser.switch_to.default_content()
         return self
 
     @allure.step('Заполнить поле Мета тэг "{meta_tag}"')

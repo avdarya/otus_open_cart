@@ -19,11 +19,12 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FFOptions
 from selenium.webdriver.remote.webdriver import WebDriver
-
+from selenium.webdriver.firefox.service import Service as FirefoxService
 from pages.admin_panel.dashboard_page import DashboardPage
 from pages.admin_panel.login_page import LoginPage
 from pages.admin_panel.products.product_form_page import ProductFormPage
 from pages.admin_panel.products.product_list_page import ProductListPage
+
 
 dotenv.load_dotenv()
 DRIVER_PATH = pathlib.Path(__file__).parent.resolve().parent / 'drivers'
@@ -136,20 +137,73 @@ def browser(request: FixtureRequest) -> Generator[WebDriver, Any, None]:
     url = request.config.getoption('--base_url')
     browser_name = request.config.getoption('--browser')
     driver_path = request.config.getoption('--driver')
+    in_docker = bool(os.getenv("IN_DOCKER"))
+
+    driver: WebDriver
+
 
     if browser_name in ('ch', 'chrome'):
         options = ChromeOptions()
-        driver = webdriver.Chrome(options=options)
+        if in_docker:
+            options.add_argument("--headless=new")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--disable-gpu")
+            driver_path_env = os.getenv("CHROMEDRIVER_PATH")
+            if driver_path_env and os.path.exists(driver_path_env):
+                service = ChromeService(executable_path=driver_path_env)
+            else:
+                service = ChromeService()
+        else:
+            service = ChromeService()
+        driver = webdriver.Chrome(service=service, options=options)
+
     elif browser_name in ('ff', 'firefox'):
         options = FFOptions()
-        driver = webdriver.Firefox(options=options)
+        if in_docker:
+            options.add_argument("--headless")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--disable-gpu")
+            driver_path_env = os.getenv("GECKODRIVER_PATH")
+            firefox_bin = os.getenv("FIREFOX_BIN")
+            if driver_path_env and os.path.exists(driver_path_env) and os.path.exists(firefox_bin):
+                service = FirefoxService(executable_path=driver_path_env)
+                options.binary_location = firefox_bin
+            else:
+                service = FirefoxService()
+        else:
+            service = FirefoxService()
+        driver = webdriver.Firefox(service=service, options=options)
+
     elif browser_name in ('ya', 'yandex'):
-        service = ChromeService(executable_path=f'{driver_path}/yandexdriver')
         options = ChromeOptions()
-        # options.binary.location = ''
+        yandex_driver_path = os.getenv("YANDEXDRIVER_PATH", f"{driver_path}/yandexdriver")
+        if in_docker:
+            options.add_argument("--headless=new")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--disable-gpu")
+            if not os.path.exists(yandex_driver_path):
+                chromedriver_path = os.getenv("CHROMEDRIVER_PATH", "/usr/bin/chromedriver")
+                service = ChromeService(executable_path=chromedriver_path)
+            else:
+                service = ChromeService(executable_path=yandex_driver_path)
+        else:
+            local_yandex_driver = f"{driver_path}/yandexdriver"
+            if os.path.exists(local_yandex_driver):
+                service = ChromeService(executable_path=local_yandex_driver)
+            else:
+                service = ChromeService()
         driver = webdriver.Chrome(service=service, options=options)
+
     else:
         raise Exception('Driver not supported')
+
+    if in_docker:
+        driver.set_window_size(1920, 1080)
+    else:
+        driver.set_window_size(1280, 1024)
 
     # request.addfinalizer(driver.quit) # for return
 
@@ -159,7 +213,6 @@ def browser(request: FixtureRequest) -> Generator[WebDriver, Any, None]:
         attachment_type=allure.attachment_type.JSON
     )
 
-    driver.set_window_size(1280, 800)
     driver.get(url)
 
     yield driver
